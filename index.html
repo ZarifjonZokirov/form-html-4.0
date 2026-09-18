@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ishga qabul qilish anketasi</title>
+  
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#1e40af',
+              800: '#1e3a8a',
+              900: '#0f172a',
+              dark: '#0a0f1d',
+              card: '#131b2e',
+              border: '#22304d'
+            }
+          },
+          animation: {
+            'fast-fade': 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'fast-slide': 'slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'fast-pop': 'popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(6px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            slideDown: {
+              '0%': { opacity: '0', transform: 'translateY(-10px)', maxHeight: '0px' },
+              '100%': { opacity: '1', transform: 'translateY(0)', maxHeight: '1000px' },
+            },
+            popIn: {
+              '0%': { transform: 'scale(0.95)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea, select {
+      user-select: auto;
+    }
+    /* 1.5x tezkor silliq o'tishlar */
+    .fast-transition {
+      transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2563eb;
+      border-radius: 4px;
+    }
+    .custom-input {
+      background: rgba(19, 27, 46, 0.75);
+      border: 1px solid #22304d;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+    }
+    .custom-input:focus {
+      border-color: #3b82f6;
+      background: rgba(19, 27, 46, 0.95);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+    /* Radio/Check card states */
+    .option-card {
+      cursor: pointer;
+      transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+    }
+    .option-card:active {
+      transform: scale(0.975);
+    }
+    .option-card.active {
+      border-color: #3b82f6;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.18) 0%, rgba(30, 58, 138, 0.25) 100%);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
+    }
+  </style>
+</head>
+
+<body class="bg-[#0a0f1d] text-slate-100 font-sans min-h-screen pb-16 selection:bg-blue-600 selection:text-white">
+  
+  <!-- Sticky Top Navigation / Header -->
+  <header class="sticky top-0 z-40 bg-[#0a0f1d]/90 backdrop-blur-md border-b border-brand-border/80 px-4 py-3">
+    <div class="max-w-2xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
+          <i data-lucide="briefcase" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-sm leading-tight tracking-wide text-white" id="navTitle">KARYERA MARKAZI</h1>
+          <p class="text-[11px] text-blue-400 font-medium" id="navSubtitle">Rasmiy ishga qabul anketasi</p>
+        </div>
+      </div>
+
+      <!-- Language Selector Pill -->
+      <div class="flex items-center bg-[#131b2e] p-1 rounded-xl border border-brand-border">
+        <button type="button" onclick="setLanguage('uz')" id="langBtnUz" class="fast-transition px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm">
+          UZB
+        </button>
+        <button type="button" onclick="setLanguage('ru')" id="langBtnRu" class="fast-transition px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">
+          РУС
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Progress Bar -->
+    <div class="max-w-2xl mx-auto mt-2.5">
+      <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1">
+        <span id="progressText">To'ldirish jarayoni</span>
+        <span id="progressPercent" class="font-bold text-blue-400">0%</span>
+      </div>
+      <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+        <div id="progressBar" class="h-full bg-gradient-to-r from-blue-600 to-cyan-400 fast-transition w-0 rounded-full"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Form Container -->
+  <main class="max-w-2xl mx-auto px-4 pt-4 pb-12">
+    <form id="vacancyForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+
+      <!-- 1. SHAXSIY MA'LUMOTLAR -->
+      <section class="bg-brand-card/90 border border-brand-border rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div class="flex items-center space-x-2.5 mb-4 pb-2.5 border-b border-brand-border/60">
+          <div class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+            <i data-lucide="user" class="w-4 h-4"></i>
+          </div>
+          <h2 class="font-bold text-sm tracking-wide text-white" id="secPersonalTitle">1. SHAXSIY MA'LUMOTLAR</h2>
+        </div>
+
+        <div class="space-y-3.5">
+          <!-- Familiya -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblLastName">Familiyangiz *</label>
+            <input type="text" name="lastName" required placeholder="Masalan: Karimov" oninput="updateProgress()"
+              class="w-full custom-input rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none">
+          </div>
+
+          <!-- Ism -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblFirstName">Ismingiz *</label>
+            <input type="text" name="firstName" required placeholder="Masalan: Sardor" oninput="updateProgress()"
+              class="w-full custom-input rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none">
+          </div>
+
+          <!-- Otasining ismi -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblMiddleName">Otasining ismi *</label>
+            <input type="text" name="middleName" required placeholder="Masalan: Alisher o'g'li" oninput="updateProgress()"
+              class="w-full custom-input rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none">
+          </div>
+
+          <!-- Jinsi -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblGender">Jinsi *</label>
+            <div class="grid grid-cols-2 gap-2.5">
+              <label class="option-card flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl border border-brand-border bg-[#101728]" onclick="selectCardOption('gender', 'male', this)">
+                <input type="radio" name="gender" value="Erkak" class="hidden" required>
+                <i data-lucide="user-check" class="w-4 h-4 text-blue-400"></i>
+                <span class="text-xs font-bold text-slate-200" id="optMale">Erkak</span>
+              </label>
+              <label class="option-card flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl border border-brand-border bg-[#101728]" onclick="selectCardOption('gender', 'female', this)">
+                <input type="radio" name="gender" value="Ayol" class="hidden">
+                <i data-lucide="heart" class="w-4 h-4 text-pink-400"></i>
+                <span class="text-xs font-bold text-slate-200" id="optFemale">Ayol</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Tug'ilgan sana -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblDob">Tug'ilgan sana *</label>
+            <div class="relative">
+              <input type="date" name="dob" required oninput="updateProgress()"
+                class="w-full custom-input rounded-xl px-3.5 py-2.5 text-sm text-white outline-none">
+            </div>
+          </div>
+
+          <!-- Turmush qurganligi -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblMarital">Turmush qurganmisiz? *</label>
+            <div class="grid grid-cols-2 gap-2.5">
+              <label class="option-card flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl border border-brand-border bg-[#101728]" onclick="selectCardOption('marital', 'yes', this)">
+                <input type="radio" name="maritalStatus" value="Ha" class="hidden" required>
+                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+                <span class="text-xs font-bold text-slate-200" id="optMaritalYes">Ha</span>
+              </label>
+              <label class="option-card flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl border border-brand-border bg-[#101728]" onclick="selectCardOption('marital', 'no', this)">
+                <input type="radio" name="maritalStatus" value="Yo'q" class="hidden">
+                <i data-lucide="x-circle" class="w-4 h-4 text-slate-400"></i>
+                <span class="text-xs font-bold text-slate-200" id="optMaritalNo">Yo'q</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. MA'LUMOTI VA ILMIY DARAJASI -->
+      <section class="bg-brand-card/90 border border-brand-border rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div class="flex items-center space-x-2.5 mb-4 pb-2.5 border-b border-brand-border/60">
+          <div class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+            <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+          </div>
+          <h2 class="font-bold text-sm tracking-wide text-white" id="secEduTitle">2. MA'LUMOTI VA DARAJASI</h2>
+        </div>
+
+        <div class="space-y-3.5">
+          <!-- Ilmiy daraja variantlari -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-2" id="lblEduDegree">Ma'lumotingiz / Ilmiy darajangiz *</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="eduContainer">
+              <!-- Dynamically localized via JS -->
+            </div>
+          </div>
+
+          <!-- Tugatgan yili -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblGradYear">Tugatgan yilingiz *</label>
+            <input type="number" name="gradYear" min="1970" max="2030" placeholder="Masalan: 2022" required oninput="updateProgress()"
+              class="w-full custom-input rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none">
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. YASHASH MANZILI -->
+      <section class="bg-brand-card/90 border border-brand-border rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div class="flex items-center space-x-2.5 mb-4 pb-2.5 border-b border-brand-border/60">
+          <div class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+            <i data-lucide="map-pin" class="w-4 h-4"></i>
+          </div>
+          <h2 class="font-bold text-sm tracking-wide text-white" id="secAddressTitle">3. YASHASH MANZILI</h2>
+        </div>
+
+        <div class="space-y-3.5">
+          <!-- 12 ta viloyat -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblRegion">Viloyat / Hudud *</label>
+            <div class="relative">
+              <select name="region" id="regionSelect" required onchange="updateProgress()"
+                class="w-full custom-input rounded-xl px-3.5 py-2.5 text-sm text-white outline-none appearance-none pr-10 cursor-pointer">
+                <!-- Populated by JS -->
+              </select>
+              <div class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Aniq manzil -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblExactAddress">Aniq yashash manzilingiz (Tuman, ko'cha, uy raqami) *</label>
+            <textarea name="exactAddress" rows="2" required placeholder="Masalan: Chilonzor tumani, 9-mavze, 24-uy" oninput="updateProgress()"
+              class="w-full custom-input rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none resize-none"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. FILIAL TANLASH -->
+      <section class="bg-brand-card/90 border border-brand-border rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-4 pb-2.5 border-b border-brand-border/60">
+          <div class="flex items-center space-x-2.5">
+            <div class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+              <i data-lucide="building-2" class="w-4 h-4"></i>
+            </div>
+            <h2 class="font-bold text-sm tracking-wide text-white" id="secBranchTitle">4. QAYSI FILIALDA ISHLAMOQCHISIZ?</h2>
+          </div>
+          <span class="text-[11px] font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md" id="branchCountBadge">11 ta filial</span>
+        </div>
+
+        <p class="text-xs text-slate-400 mb-3" id="branchSubText">O'zingizga eng qulay bo'lgan filialimizni tanlang:</p>
+
+        <!-- Filiallar ro'yxati -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="branchesContainer">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- 5. VAKANSIYA / LAVOZIM -->
+      <section class="bg-brand-card/90 border border-brand-border rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-4 pb-2.5 border-b border-brand-border/60">
+          <div class="flex items-center space-x-2.5">
+            <div class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+              <i data-lucide="award" class="w-4 h-4"></i>
+            </div>
+            <h2 class="font-bold text-sm tracking-wide text-white" id="secJobTitle">5. TALABGOR LAVOZIMINGIZ</h2>
+          </div>
+          <span class="text-[11px] font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md" id="jobCountBadge">21 ta lavozim</span>
+        </div>
+
+        <!-- Lavozim Qidirish Inputi -->
+        <div class="relative mb-3">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="jobSearchInput" oninput="filterJobs()" placeholder="Lavozim nomini qidirish..."
+            class="w-full custom-input rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none">
+        </div>
+
+        <!-- Lavozimlar ro'yxati -->
+        <div class="grid grid-cols-1 gap-2 max-h-72 overflow-y-auto pr-1" id="jobsContainer">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- DINAMIK QISM: Tanlangan ish tagida tajriba yili va oldingi tajriba -->
+        <div id="experienceSection" class="hidden mt-4 pt-4 border-t border-brand-border/80 animate-fast-slide">
+          <div class="bg-blue-950/30 border border-blue-500/30 rounded-xl p-3.5 space-y-3.5">
+            
+            <div class="flex items-center space-x-2">
+              <i data-lucide="clock" class="w-4 h-4 text-blue-400"></i>
+              <span class="text-xs font-bold text-blue-300" id="expHeaderTitle">Ushbu lavozim bo'yicha tajribangiz *</span>
+            </div>
+
+            <!-- Tajriba yillari -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="expOptionsContainer">
+              <!-- Populated by JS -->
+            </div>
+
+            <!-- Oldingi ish joyi -->
+            <div class="pt-2">
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblPastWork">Oldin qayerda, qachon va kim bo'lib ishlagansiz? *</label>
+              <textarea name="pastExperience" id="pastExpInput" rows="2" placeholder="Masalan: 2021-2023 yy. 'Smart Savdo' kompaniyasida katta sotuvchi lavozimida..." oninput="updateProgress()"
+                class="w-full custom-input rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none resize-none"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. BOG'LANISH RAQAMLARI -->
+      <section class="bg-brand-card/90 border border-brand-border rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div class="flex items-center space-x-2.5 mb-4 pb-2.5 border-b border-brand-border/60">
+          <div class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+            <i data-lucide="phone-call" class="w-4 h-4"></i>
+          </div>
+          <h2 class="font-bold text-sm tracking-wide text-white" id="secContactTitle">6. ALOQA MA'LUMOTLARI</h2>
+        </div>
+
+        <div class="space-y-3.5">
+          <!-- Asosiy raqam -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblPhone1">Telefon raqamingiz *</label>
+            <div class="relative">
+              <div class="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center space-x-1.5 text-slate-400 pointer-events-none">
+                <span class="text-xs font-bold text-slate-300">🇺🇿 +998</span>
+              </div>
+              <input type="tel" name="phone1" id="phone1" required maxlength="9" placeholder="90 123 45 67" oninput="formatPhoneInput(this); updateProgress();"
+                class="w-full custom-input rounded-xl pl-20 pr-3.5 py-2.5 text-sm font-semibold tracking-wider text-white placeholder-slate-500 outline-none">
+            </div>
+          </div>
+
+          <!-- Qo'shimcha raqam -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5" id="lblPhone2">Qo'shimcha telefon raqami</label>
+            <div class="relative">
+              <div class="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center space-x-1.5 text-slate-400 pointer-events-none">
+                <span class="text-xs font-bold text-slate-300">🇺🇿 +998</span>
+              </div>
+              <input type="tel" name="phone2" id="phone2" maxlength="9" placeholder="99 987 65 43" oninput="formatPhoneInput(this)"
+                class="w-full custom-input rounded-xl pl-20 pr-3.5 py-2.5 text-sm font-semibold tracking-wider text-white placeholder-slate-500 outline-none">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- YUBORISH TUGMASI -->
+      <div class="pt-2">
+        <button type="submit" id="submitBtn"
+          class="fast-transition w-full bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2.5 active:scale-[0.98]">
+          <i data-lucide="send" class="w-5 h-5"></i>
+          <span class="text-sm tracking-wider uppercase" id="btnSubmitText">Arizani yuborish</span>
+        </button>
+        <p class="text-center text-[11px] text-slate-500 mt-2.5" id="privacyNote">Ma'lumotlaringiz xavfsizligi kafolatlanadi.</p>
+      </div>
+    </form>
+  </main>
+
+  <!-- Success Confirmation Modal -->
+  <div id="successModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-[#111827] border border-blue-500/40 rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl animate-fast-pop">
+      <div class="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
+        <i data-lucide="check" class="w-8 h-8 stroke-[3]"></i>
+      </div>
+      <h3 class="text-lg font-extrabold text-white" id="modalTitle">Arizangiz qabul qilindi!</h3>
+      <p class="text-xs text-slate-300 leading-relaxed" id="modalDesc">
+        Kadrlar bo'limi mutaxassislari arizangizni ko'rib chiqib, tez orada ko'rsatilgan telefon raqami orqali siz bilan bog'lanishadi.
+      </p>
+      <div class="bg-slate-900/80 rounded-xl p-3 text-left border border-slate-800 space-y-1 text-xs">
+        <div class="text-slate-400 flex justify-between"><span id="lblSummaryPos">Lavozim:</span> <strong id="summaryJob" class="text-blue-400 text-right">-</strong></div>
+        <div class="text-slate-400 flex justify-between"><span id="lblSummaryBranch">Filial:</span> <strong id="summaryBranch" class="text-slate-200 text-right">-</strong></div>
+        <div class="text-slate-400 flex justify-between"><span id="lblSummaryPhone">Telefon:</span> <strong id="summaryPhone" class="text-slate-200 text-right">-</strong></div>
+      </div>
+      <button onclick="closeModalAndExit()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-xs tracking-wider uppercase fast-transition">
+        Yopish
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Telegram WebApp
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    // STATE
+    let currentLang = 'uz';
+    let selectedJob = '';
+    let selectedBranch = '';
+    let selectedEdu = '';
+    let selectedExp = '';
+
+    // TRANSLATION DICTIONARY
+    const i18n = {
+      uz: {
+        navTitle: "KARYERA MARKAZI",
+        navSubtitle: "Rasmiy ishga qabul anketasi",
+        progressText: "To'ldirish jarayoni",
+        secPersonalTitle: "1. SHAXSIY MA'LUMOTLAR",
+        lblLastName: "Familiyangiz *",
+        lblFirstName: "Ismingiz *",
+        lblMiddleName: "Otasining ismi *",
+        lblGender: "Jinsi *",
+        optMale: "Erkak",
+        optFemale: "Ayol",
+        lblDob: "Tug'ilgan sana *",
+        lblMarital: "Turmush qurganmisiz? *",
+        optMaritalYes: "Ha",
+        optMaritalNo: "Yo'q",
+        secEduTitle: "2. MA'LUMOTI VA DARAJASI",
+        lblEduDegree: "Ma'lumotingiz / Ilmiy darajangiz *",
+        lblGradYear: "Tugatgan yilingiz *",
+        secAddressTitle: "3. YASHASH MANZILI",
+        lblRegion: "Viloyat / Hudud *",
+        lblExactAddress: "Aniq yashash manzilingiz (Tuman, ko'cha, uy raqami) *",
+        secBranchTitle: "4. QAYSI FILIALDA ISHLAMOQCHISIZ?",
+        branchCountBadge: "11 ta filial",
+        branchSubText: "O'zingizga eng qulay bo'lgan filialimizni tanlang:",
+        secJobTitle: "5. TALABGOR LAVOZIMINGIZ",
+        jobCountBadge: "21 ta lavozim",
+        searchPlaceholder: "Lavozim nomini qidirish...",
+        expHeaderTitle: "Ushbu lavozim bo'yicha tajribangiz *",
+        lblPastWork: "Oldin qayerda, qachon va kim bo'lib ishlagansiz? *",
+        secContactTitle: "6. ALOQA MA'LUMOTLARI",
+        lblPhone1: "Telefon raqamingiz *",
+        lblPhone2: "Qo'shimcha telefon raqami",
+        btnSubmitText: "Arizani yuborish",
+        privacyNote: "Ma'lumotlaringiz maxfiyligi kafolatlanadi.",
+        modalTitle: "Arizangiz muvaffaqiyatli qabul qilindi!",
+        modalDesc: "Kadrlar bo'limi arizangizni ko'rib chiqib, tez orada ko'rsatilgan telefon orqali siz bilan bog'lanishadi.",
+        lblSummaryPos: "Lavozim:",
+        lblSummaryBranch: "Filial:",
+        lblSummaryPhone: "Telefon:",
+        selectRegionDefault: "Viloyatni tanlang...",
+        eduOptions: [
+          { id: "orta", label: "O'rta ma'lumot" },
+          { id: "orta_maxsus", label: "O'rta-maxsus (Kollej/Litsey)" },
+          { id: "tugallanmagan_oliy", label: "Tugallanmagan oliy" },
+          { id: "oliy_bakalavr", label: "Oliy (Bakalavr)" },
+          { id: "magistr", label: "Oliy (Magistratura / PhD)" }
+        ],
+        regions: [
+          "Toshkent shahri", "Toshkent viloyati", "Andijon viloyati", "Buxoro viloyati",
+          "Farg'ona viloyati", "Jizzax viloyati", "Xorazm viloyati", "Namangan viloyati",
+          "Navoiy viloyati", "Qashqadaryo viloyati", "Samarqand viloyati",
+          "Sirdaryo viloyati", "Surxondaryo viloyati", "Qoraqalpog'iston Respublikasi"
+        ],
+        branches: [
+          { id: "turkiston", name: "Turkiston filiali", icon: "map-pin" },
+          { id: "navoiy", name: "Navoiy filiali", icon: "map-pin" },
+          { id: "istiqlol", name: "Istiqlol (Gorod) filiali", icon: "map-pin" },
+          { id: "mingtut", name: "Mingtut filiali", icon: "map-pin" },
+          { id: "yakkatut", name: "Yakkatut filiali", icon: "map-pin" },
+          { id: "head_office", name: "Bosh ofis", icon: "building" },
+          { id: "pop", name: "Pop filiali", icon: "map-pin" },
+          { id: "furqat", name: "Furqat filiali", icon: "map-pin" },
+          { id: "buvayda", name: "Buvayda filiali", icon: "map-pin" },
+          { id: "yangiqorgon", name: "Yangiqo'rg'on (Buvayda) filiali", icon: "map-pin" },
+          { id: "yaypan", name: "Yaypan filiali", icon: "map-pin" }
+        ],
+        jobs: [
+          { id: "sotuvchi_maslahatchi", name: "Sotuvchi maslahatchi", category: "savdo" },
+          { id: "bosh_sotuvchi", name: "Bosh sotuvchi maslahatchisi", category: "savdo" },
+          { id: "kassir_yordamchisi", name: "Kassir yordamchisi", category: "savdo" },
+          { id: "shartnoma_bosh_mutaxassis", name: "Shartnoma rasmiylashtirish bo'limi bosh mutaxassisi", category: "rasmiylashtirish" },
+          { id: "shartnoma_mutaxassis", name: "Shartnoma rasmiylashtirish bo'limi mutaxassisi", category: "rasmiylashtirish" },
+          { id: "savdo_boshligi", name: "Savdo bo'limi boshlig'i (Boshqaruvchi)", category: "boshqaruv" },
+          { id: "taklif_shikoyat_operator", name: "Taklif va shikoyatlar bilan ishlash operatori", category: "operator" },
+          { id: "ombor_mudiri", name: "Ombor sektori mudiri", category: "ombor" },
+          { id: "ombor_mutaxassis", name: "Ombor sektori mutaxassisi", category: "ombor" },
+          { id: "oshpaz", name: "Oshpaz", category: "xizmat" },
+          { id: "oshxona_ishchisi", name: "Oshxona ishchisi", category: "xizmat" },
+          { id: "hudud_tozalovchi", name: "Hudud tozalovchi", category: "xizmat" },
+          { id: "haydovchi", name: "Haydovchi", category: "logistika" },
+          { id: "kuryer", name: "Kuryer", category: "logistika" },
+          { id: "unduruv_mutaxassis", name: "Undiruv bo'limi mutaxassisi", category: "moliya" },
+          { id: "marketolog", name: "Marketolog", category: "marketing" },
+          { id: "targetolog", name: "Targetolog", category: "marketing" },
+          { id: "smm_manager", name: "SMM menejer", category: "marketing" },
+          { id: "texnik", name: "Texnik", category: "texnik" },
+          { id: "motion_designer", name: "Motion designer", category: "kreativ" },
+          { id: "copywriter", name: "Copywriter", category: "kreativ" }
+        ],
+        expOptions: [
+          { id: "none", label: "Yo'q (0 yil)" },
+          { id: "less_1", label: "1 yildan kam" },
+          { id: "1_2", label: "1 - 2 yil" },
+          { id: "2_3", label: "2 - 3 yil" },
+          { id: "3_plus", label: "3+ yil" }
+        ]
+      },
+      ru: {
+        navTitle: "ЦЕНТР КАРЬЕРЫ",
+        navSubtitle: "Официальная анкета соискателя",
+        progressText: "Прогресс заполнения",
+        secPersonalTitle: "1. ЛИЧНЫЕ ДАННЫЕ",
+        lblLastName: "Ваша фамилия *",
+        lblFirstName: "Ваше имя *",
+        lblMiddleName: "Отчество *",
+        lblGender: "Пол *",
+        optMale: "Мужской",
+        optFemale: "Женский",
+        lblDob: "Дата рождения *",
+        lblMarital: "Семейное положение *",
+        optMaritalYes: "Женат / Замужем",
+        optMaritalNo: "Холост / Не замужем",
+        secEduTitle: "2. ОБРАЗОВАНИЕ И СТЕПЕНЬ",
+        lblEduDegree: "Уровень образования / Степень *",
+        lblGradYear: "Год окончания *",
+        secAddressTitle: "3. АДРЕС ПРОЖИВАНИЯ",
+        lblRegion: "Регион / Область *",
+        lblExactAddress: "Точный адрес проживания (Район, улица, дом) *",
+        secBranchTitle: "4. В КАКОМ ФИЛИАЛЕ ХОТИТЕ РАБОТАТЬ?",
+        branchCountBadge: "11 филиалов",
+        branchSubText: "Выберите наиболее удобный для вас филиал:",
+        secJobTitle: "5. ЖЕЛАЕМАЯ ДОЛЖНОСТЬ",
+        jobCountBadge: "21 должность",
+        searchPlaceholder: "Поиск должности...",
+        expHeaderTitle: "Опыт работы по этой должности *",
+        lblPastWork: "Где, когда и кем вы работали ранее? *",
+        secContactTitle: "6. КОНТАКТНЫЕ ДАННЫЕ",
+        lblPhone1: "Ваш номер телефона *",
+        lblPhone2: "Дополнительный номер",
+        btnSubmitText: "Отправить анкету",
+        privacyNote: "Конфиденциальность ваших данных гарантируется.",
+        modalTitle: "Анкета успешно принята!",
+        modalDesc: "Специалисты отдела кадров рассмотрят вашу заявку и свяжутся с вами в ближайшее время.",
+        lblSummaryPos: "Должность:",
+        lblSummaryBranch: "Филиал:",
+        lblSummaryPhone: "Телефон:",
+        selectRegionDefault: "Выберите область...",
+        eduOptions: [
+          { id: "orta", label: "Среднее образование" },
+          { id: "orta_maxsus", label: "Средне-специальное (Колледж/Лицей)" },
+          { id: "tugallanmagan_oliy", label: "Неоконченное высшее" },
+          { id: "oliy_bakalavr", label: "Высшее (Бакалавриат)" },
+          { id: "magistr", label: "Высшее (Магистратура / PhD)" }
+        ],
+        regions: [
+          "г. Ташкент", "Ташкентская область", "Андижанская область", "Бухарская область",
+          "Ферганская область", "Джизакская область", "Хорезмская область", "Наманганская область",
+          "Навоийская область", "Кашкадарьинская область", "Самаркандская область",
+          "Сырдарьинская область", "Сурхандарьинская область", "Республика Каракалпакстан"
+        ],
+        branches: [
+          { id: "turkiston", name: "Филиал Туркистон", icon: "map-pin" },
+          { id: "navoiy", name: "Филиал Навои", icon: "map-pin" },
+          { id: "istiqlol", name: "Филиал Истиклол (Город)", icon: "map-pin" },
+          { id: "mingtut", name: "Филиал Мингтут", icon: "map-pin" },
+          { id: "yakkatut", name: "Филиал Яккатут", icon: "map-pin" },
+          { id: "head_office", name: "Главный офис", icon: "building" },
+          { id: "pop", name: "Филиал Поп", icon: "map-pin" },
+          { id: "furqat", name: "Филиал Фуркат", icon: "map-pin" },
+          { id: "buvayda", name: "Филиал Бувайда", icon: "map-pin" },
+          { id: "yangiqorgon", name: "Филиал Янгикурган (Бувайда)", icon: "map-pin" },
+          { id: "yaypan", name: "Филиал Яйпан", icon: "map-pin" }
+        ],
+        jobs: [
+          { id: "sotuvchi_maslahatchi", name: "Продавец-консультант", category: "savdo" },
+          { id: "bosh_sotuvchi", name: "Старший продавец-консультант", category: "savdo" },
+          { id: "kassir_yordamchisi", name: "Помощник кассира", category: "savdo" },
+          { id: "shartnoma_bosh_mutaxassis", name: "Главный специалист отдела оформления договоров", category: "rasmiylashtirish" },
+          { id: "shartnoma_mutaxassis", name: "Специалист отдела оформления договоров", category: "rasmiylashtirish" },
+          { id: "savdo_boshligi", name: "Руководитель отдела продаж (Управляющий)", category: "boshqaruv" },
+          { id: "taklif_shikoyat_operator", name: "Оператор по работе с обращениями и жалобами", category: "operator" },
+          { id: "ombor_mudiri", name: "Заведующий складским сектором", category: "ombor" },
+          { id: "ombor_mutaxassis", name: "Специалист складского сектора", category: "ombor" },
+          { id: "oshpaz", name: "Повар", category: "xizmat" },
+          { id: "oshxona_ishchisi", name: "Работник кухни", category: "xizmat" },
+          { id: "hudud_tozalovchi", name: "Уборщик территории", category: "xizmat" },
+          { id: "haydovchi", name: "Водитель", category: "logistika" },
+          { id: "kuryer", name: "Курьер", category: "logistika" },
+          { id: "unduruv_mutaxassis", name: "Специалист отдела взыскания", category: "moliya" },
+          { id: "marketolog", name: "Маркетолог", category: "marketing" },
+          { id: "targetolog", name: "Таргетолог", category: "marketing" },
+          { id: "smm_manager", name: "SMM-менеджер", category: "marketing" },
+          { id: "texnik", name: "Техник", category: "texnik" },
+          { id: "motion_designer", name: "Motion-дизайнер", category: "kreativ" },
+          { id: "copywriter", name: "Копирайтер", category: "kreativ" }
+        ],
+        expOptions: [
+          { id: "none", label: "Нет (0 лет)" },
+          { id: "less_1", label: "Менее 1 года" },
+          { id: "1_2", label: "1 - 2 года" },
+          { id: "2_3", label: "2 - 3 года" },
+          { id: "3_plus", label: "Более 3 лет" }
+        ]
+      }
+    };
+
+    // SET LANGUAGE FUNCTION
+    function setLanguage(lang) {
+      currentLang = lang;
+      const dict = i18n[lang];
+
+      // Update Top Toggle UI
+      const uzBtn = document.getElementById('langBtnUz');
+      const ruBtn = document.getElementById('langBtnRu');
+      if (lang === 'uz') {
+        uzBtn.className = "fast-transition px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm";
+        ruBtn.className = "fast-transition px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white";
+      } else {
+        ruBtn.className = "fast-transition px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm";
+        uzBtn.className = "fast-transition px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white";
+      }
+
+      // Update static texts
+      document.getElementById('navTitle').innerText = dict.navTitle;
+      document.getElementById('navSubtitle').innerText = dict.navSubtitle;
+      document.getElementById('progressText').innerText = dict.progressText;
+      
+      document.getElementById('secPersonalTitle').innerText = dict.secPersonalTitle;
+      document.getElementById('lblLastName').innerText = dict.lblLastName;
+      document.getElementById('lblFirstName').innerText = dict.lblFirstName;
+      document.getElementById('lblMiddleName').innerText = dict.lblMiddleName;
+      document.getElementById('lblGender').innerText = dict.lblGender;
+      document.getElementById('optMale').innerText = dict.optMale;
+      document.getElementById('optFemale').innerText = dict.optFemale;
+      document.getElementById('lblDob').innerText = dict.lblDob;
+      document.getElementById('lblMarital').innerText = dict.lblMarital;
+      document.getElementById('optMaritalYes').innerText = dict.optMaritalYes;
+      document.getElementById('optMaritalNo').innerText = dict.optMaritalNo;
+
+      document.getElementById('secEduTitle').innerText = dict.secEduTitle;
+      document.getElementById('lblEduDegree').innerText = dict.lblEduDegree;
+      document.getElementById('lblGradYear').innerText = dict.lblGradYear;
+
+      document.getElementById('secAddressTitle').innerText = dict.secAddressTitle;
+      document.getElementById('lblRegion').innerText = dict.lblRegion;
+      document.getElementById('lblExactAddress').innerText = dict.lblExactAddress;
+
+      document.getElementById('secBranchTitle').innerText = dict.secBranchTitle;
+      document.getElementById('branchCountBadge').innerText = dict.branchCountBadge;
+      document.getElementById('branchSubText').innerText = dict.branchSubText;
+
+      document.getElementById('secJobTitle').innerText = dict.secJobTitle;
+      document.getElementById('jobCountBadge').innerText = dict.jobCountBadge;
+      document.getElementById('jobSearchInput').placeholder = dict.searchPlaceholder;
+
+      document.getElementById('expHeaderTitle').innerText = dict.expHeaderTitle;
+      document.getElementById('lblPastWork').innerText = dict.lblPastWork;
+
+      document.getElementById('secContactTitle').innerText = dict.secContactTitle;
+      document.getElementById('lblPhone1').innerText = dict.lblPhone1;
+      document.getElementById('lblPhone2').innerText = dict.lblPhone2;
+
+      document.getElementById('btnSubmitText').innerText = dict.btnSubmitText;
+      document.getElementById('privacyNote').innerText = dict.privacyNote;
+      document.getElementById('modalTitle').innerText = dict.modalTitle;
+      document.getElementById('modalDesc').innerText = dict.modalDesc;
+      document.getElementById('lblSummaryPos').innerText = dict.lblSummaryPos;
+      document.getElementById('lblSummaryBranch').innerText = dict.lblSummaryBranch;
+      document.getElementById('lblSummaryPhone').innerText = dict.lblSummaryPhone;
+
+      // Re-render dynamic components
+      renderEduOptions();
+      renderRegions();
+      renderBranches();
+      renderJobs();
+      renderExpOptions();
+
+      // Trigger icons re-render
+      setTimeout(() => lucide.createIcons(), 20);
+      updateProgress();
+    }
+
+    // RENDER EDUCATION OPTIONS
+    function renderEduOptions() {
+      const container = document.getElementById('eduContainer');
+      const list = i18n[currentLang].eduOptions;
+      container.innerHTML = list.map(item => `
+        <label class="option-card flex items-center justify-between p-2.5 rounded-xl border border-brand-border bg-[#101728] ${selectedEdu === item.id ? 'active' : ''}" 
+               onclick="selectEduOption('${item.id}', this)">
+          <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 rounded-full ${selectedEdu === item.id ? 'bg-blue-400' : 'bg-slate-600'}"></div>
+            <span class="text-xs font-semibold text-slate-200">${item.label}</span>
+          </div>
+          <input type="radio" name="eduDegree" value="${item.label}" class="hidden" ${selectedEdu === item.id ? 'checked' : ''} required>
+          <i data-lucide="check" class="w-3.5 h-3.5 text-blue-400 ${selectedEdu === item.id ? 'opacity-100' : 'opacity-0'}"></i>
+        </label>
+      `).join('');
+    }
+
+    function selectEduOption(id, el) {
+      selectedEdu = id;
+      document.querySelectorAll('#eduContainer .option-card').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      const radio = el.querySelector('input');
+      if (radio) radio.checked = true;
+      triggerHaptic();
+      updateProgress();
+      setTimeout(() => lucide.createIcons(), 10);
+    }
+
+    // RENDER REGIONS
+    function renderRegions() {
+      const select = document.getElementById('regionSelect');
+      const regions = i18n[currentLang].regions;
+      const currentVal = select.value;
+      
+      let html = `<option value="" disabled ${!currentVal ? 'selected' : ''}>${i18n[currentLang].selectRegionDefault}</option>`;
+      regions.forEach(reg => {
+        html += `<option value="${reg}" ${currentVal === reg ? 'selected' : ''}>${reg}</option>`;
+      });
+      select.innerHTML = html;
+    }
+
+    // RENDER BRANCHES
+    function renderBranches() {
+      const container = document.getElementById('branchesContainer');
+      const list = i18n[currentLang].branches;
+      container.innerHTML = list.map(b => `
+        <label class="option-card flex items-center justify-between p-3 rounded-xl border border-brand-border bg-[#101728] ${selectedBranch === b.id ? 'active' : ''}"
+               onclick="selectBranchOption('${b.id}', this)">
+          <div class="flex items-center space-x-2.5">
+            <div class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+              <i data-lucide="${b.icon}" class="w-3.5 h-3.5"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-200">${b.name}</span>
+          </div>
+          <input type="radio" name="branch" value="${b.name}" class="hidden" ${selectedBranch === b.id ? 'checked' : ''} required>
+          <i data-lucide="check-circle" class="w-4 h-4 text-blue-400 ${selectedBranch === b.id ? 'opacity-100' : 'opacity-0'}"></i>
+        </label>
+      `).join('');
+    }
+
+    function selectBranchOption(id, el) {
+      selectedBranch = id;
+      document.querySelectorAll('#branchesContainer .option-card').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      const radio = el.querySelector('input');
+      if (radio) radio.checked = true;
+      triggerHaptic();
+      updateProgress();
+      renderBranches(); // refresh check icons
+      setTimeout(() => lucide.createIcons(), 10);
+    }
+
+    // RENDER JOBS
+    function renderJobs() {
+      const container = document.getElementById('jobsContainer');
+      const list = i18n[currentLang].jobs;
+      const query = (document.getElementById('jobSearchInput')?.value || '').toLowerCase().trim();
+
+      const filtered = list.filter(j => j.name.toLowerCase().includes(query));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-xs text-slate-500">Hech qanday lavozim topilmadi</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(job => `
+        <label class="option-card flex items-center justify-between p-2.5 rounded-xl border border-brand-border bg-[#101728] ${selectedJob === job.id ? 'active' : ''}"
+               onclick="selectJobOption('${job.id}', '${job.name.replace(/'/g, "\\'")}', this)">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-2 h-2 rounded-full ${selectedJob === job.id ? 'bg-blue-400 ring-2 ring-blue-500/40' : 'bg-slate-600'}"></div>
+            <span class="text-xs font-semibold text-slate-200 leading-tight">${job.name}</span>
+          </div>
+          <input type="radio" name="jobPosition" value="${job.name}" class="hidden" ${selectedJob === job.id ? 'checked' : ''} required>
+          <i data-lucide="check" class="w-4 h-4 text-blue-400 ${selectedJob === job.id ? 'opacity-100' : 'opacity-0'}"></i>
+        </label>
+      `).join('');
+
+      setTimeout(() => lucide.createIcons(), 10);
+    }
+
+    function filterJobs() {
+      renderJobs();
+    }
+
+    function selectJobOption(id, jobName, el) {
+      selectedJob = id;
+      document.querySelectorAll('#jobsContainer .option-card').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      const radio = el.querySelector('input');
+      if (radio) radio.checked = true;
+
+      // Show Experience Section dynamically
+      const expSec = document.getElementById('experienceSection');
+      expSec.classList.remove('hidden');
+
+      // Make past experience required
+      const pastInput = document.getElementById('pastExpInput');
+      pastInput.setAttribute('required', 'true');
+
+      triggerHaptic();
+      updateProgress();
+      renderJobs(); // refresh check icons
+      setTimeout(() => lucide.createIcons(), 10);
+    }
+
+    // RENDER EXPERIENCE OPTIONS
+    function renderExpOptions() {
+      const container = document.getElementById('expOptionsContainer');
+      const list = i18n[currentLang].expOptions;
+      container.innerHTML = list.map(item => `
+        <label class="option-card flex items-center justify-center p-2 rounded-lg border border-brand-border bg-[#101728] text-center ${selectedExp === item.id ? 'active' : ''}"
+               onclick="selectExpOption('${item.id}', this)">
+          <span class="text-[11px] font-bold text-slate-200">${item.label}</span>
+          <input type="radio" name="experienceYears" value="${item.label}" class="hidden" ${selectedExp === item.id ? 'checked' : ''}>
+        </label>
+      `).join('');
+    }
+
+    function selectExpOption(id, el) {
+      selectedExp = id;
+      document.querySelectorAll('#expOptionsContainer .option-card').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      const radio = el.querySelector('input');
+      if (radio) radio.checked = true;
+      triggerHaptic();
+      updateProgress();
+    }
+
+    // GENERAL CARD SELECTOR (For Gender, Marital Status)
+    function selectCardOption(group, val, el) {
+      const parent = el.parentElement;
+      parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      const radio = el.querySelector('input[type="radio"]');
+      if (radio) radio.checked = true;
+      triggerHaptic();
+      updateProgress();
+    }
+
+    // PHONE FORMATTER
+    function formatPhoneInput(input) {
+      let val = input.value.replace(/\D/g, '');
+      if (val.length > 9) val = val.substring(0, 9);
+      
+      // Formatting visually: 90 123 45 67
+      let formatted = '';
+      if (val.length > 0) formatted += val.substring(0, 2);
+      if (val.length > 2) formatted += ' ' + val.substring(2, 5);
+      if (val.length > 5) formatted += ' ' + val.substring(5, 7);
+      if (val.length > 7) formatted += ' ' + val.substring(7, 9);
+      
+      input.value = formatted;
+    }
+
+    // HAPTIC FEEDBACK FOR TELEGRAM MINI APP
+    function triggerHaptic() {
+      try {
+        if (tg?.HapticFeedback) {
+          tg.HapticFeedback.impactOccurred('light');
+        }
+      } catch (e) {}
+    }
+
+    // LIVE PROGRESS BAR CALCULATION
+    function updateProgress() {
+      const form = document.getElementById('vacancyForm');
+      let totalFields = 11; // base count of primary requirements
+      let completedFields = 0;
+
+      if (form.lastName.value.trim()) completedFields++;
+      if (form.firstName.value.trim()) completedFields++;
+      if (form.middleName.value.trim()) completedFields++;
+      if (form.querySelector('input[name="gender"]:checked')) completedFields++;
+      if (form.dob.value) completedFields++;
+      if (form.querySelector('input[name="maritalStatus"]:checked')) completedFields++;
+      if (selectedEdu) completedFields++;
+      if (form.gradYear.value) completedFields++;
+      if (form.region.value) completedFields++;
+      if (form.exactAddress.value.trim()) completedFields++;
+      if (selectedBranch) completedFields++;
+      if (selectedJob) {
+        totalFields += 2; // exp years + past work info
+        completedFields++;
+        if (selectedExp) completedFields++;
+        if (form.pastExperience?.value.trim()) completedFields++;
+      }
+      if (form.phone1.value.replace(/\D/g, '').length === 9) completedFields++;
+
+      const percent = Math.min(Math.round((completedFields / totalFields) * 100), 100);
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressPercent').innerText = percent + '%';
+    }
+
+    // HANDLE FORM SUBMISSION
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+
+      if (!selectedJob) {
+        alert(currentLang === 'uz' ? "Iltimos, talabgor lavozimingizni tanlang!" : "Пожалуйста, выберите желаемую должность!");
+        return;
+      }
+      if (!selectedBranch) {
+        alert(currentLang === 'uz' ? "Iltimos, ishlamoqchi bo'lgan filialimizni tanlang!" : "Пожалуйста, выберите филиал!");
+        return;
+      }
+      if (!selectedExp) {
+        alert(currentLang === 'uz' ? "Iltimos, tajriba muddatini tanlang!" : "Пожалуйста, выберите опыт работы!");
+        return;
+      }
+
+      const form = e.target;
+      const submitButton = document.getElementById('submitBtn');
+      const formData = {
+        fullName: `${form.firstName.value} ${form.lastName.value}`,
+        fatherName: form.middleName.value,
+        gender: form.querySelector('input[name="gender"]:checked')?.value,
+        dob: form.dob.value,
+        maritalStatus: form.querySelector('input[name="maritalStatus"]:checked')?.value === 'Ha'
+          ? 'Turmush qurgan'
+          : 'Turmush qurmagan',
+        educationLevel: form.querySelector('input[name="eduDegree"]:checked')?.value,
+        graduationYear: form.gradYear.value,
+        region: form.region.value,
+        exactAddress: form.exactAddress.value,
+        targetBranch: form.querySelector('input[name="branch"]:checked')?.value,
+        jobPosition: form.querySelector('input[name="jobPosition"]:checked')?.value,
+        experienceYears: form.querySelector('input[name="experienceYears"]:checked')?.value,
+        pastExperience: form.pastExperience.value,
+        phone1: '+998 ' + form.phone1.value,
+        phone2: form.phone2.value ? '+998 ' + form.phone2.value : "Ko'rsatilmadi",
+        submittedAt: new Date().toISOString()
+      };
+
+      const backendPayload = {
+        full_name: formData.fullName,
+        father_name: formData.fatherName || '',
+        job_position: formData.jobPosition || '',
+        region: formData.region || '',
+        exact_address: formData.exactAddress || '',
+        phone1: formData.phone1,
+        phone2: formData.phone2,
+        gender: formData.gender || '',
+        dob: formData.dob || '',
+        marital_status: formData.maritalStatus || '',
+        education_level: formData.educationLevel || '',
+        graduation_year: formData.graduationYear || '',
+        target_branch: formData.targetBranch || '',
+        past_experience: formData.pastExperience || '',
+        branch: formData.targetBranch || '',
+        education: formData.educationLevel || '',
+        grad_year: formData.graduationYear || '',
+        experience_years: formData.experienceYears || '',
+        marital_status: formData.maritalStatus || ''
+      };
+
+      submitButton.disabled = true;
+      submitButton.classList.add('opacity-70', 'cursor-wait');
+
+      try {
+        const response = await fetch('/api/candidates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(backendPayload)
+        });
+
+        if (!response.ok) {
+          let errorMessage = `Server xatosi (${response.status})`;
+          try {
+            const errorData = await response.json();
+            if (errorData.error) errorMessage = errorData.error;
+          } catch (parseError) {}
+          throw new Error(errorMessage);
+        }
+      } catch (error) {
+        console.error('HRMS tizimiga yuborishda xato:', error);
+        alert(currentLang === 'uz'
+          ? `Yuborishda xatolik: ${error.message}`
+          : `Ошибка отправки: ${error.message}`);
+        return;
+      } finally {
+        submitButton.disabled = false;
+        submitButton.classList.remove('opacity-70', 'cursor-wait');
+      }
+
+      // Summary preview in modal
+      document.getElementById('summaryJob').innerText = formData.jobPosition;
+      document.getElementById('summaryBranch').innerText = formData.branch;
+      document.getElementById('summaryPhone').innerText = formData.phone1;
+      resetFormAfterSubmit();
+
+      // Confetti celebration
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 60,
+          origin: { y: 0.7 }
+        });
+      } catch (err) {}
+
+      // Telegram WebApp sendData if running inside telegram
+      if (tg && tg.sendData) {
+        try {
+          tg.HapticFeedback?.notificationOccurred('success');
+        } catch(e){}
+      }
+
+      // Show Success Modal
+      document.getElementById('successModal').classList.remove('hidden');
+    }
+
+    function resetFormAfterSubmit() {
+      const form = document.getElementById('vacancyForm');
+      form.reset();
+      selectedJob = '';
+      selectedBranch = '';
+      selectedEdu = '';
+      selectedExp = '';
+
+      document.getElementById('jobSearchInput').value = '';
+      document.getElementById('experienceSection').classList.add('hidden');
+      document.getElementById('pastExpInput').removeAttribute('required');
+      document.querySelectorAll('.option-card.active').forEach(card => card.classList.remove('active'));
+
+      renderEduOptions();
+      renderRegions();
+      renderBranches();
+      renderJobs();
+      renderExpOptions();
+      updateProgress();
+      setTimeout(() => lucide.createIcons(), 10);
+    }
+
+    function closeModalAndExit() {
+      document.getElementById('successModal').classList.add('hidden');
+      if (tg && tg.close) {
+        tg.close();
+      }
+    }
+
+    // INITIALIZATION ON LOAD
+    window.addEventListener('DOMContentLoaded', () => {
+      setLanguage('uz');
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
